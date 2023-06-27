@@ -1,12 +1,15 @@
 ---
-- name: Create a ext4 filesystem on ext disk
-  community.general.filesystem:
-    fstype: ext4
-    dev: /dev/vdb
+- name: Use external disk for data
+  block:
+    - name: Create a ext4 filesystem on ext disk
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vdb
 
-- name: Mount ext disk to the MKS storage/uploads folder
-  ansible.posix.mount:
-    path: /opt/homeless/mks/deploy/storage/data/uploads
-    src: /dev/vdb
-    fstype: ext4
-    state: mounted
+    - name: Mount ext disk to the MKS storage/uploads folder
+      ansible.posix.mount:
+        path: /opt/homeless/mks/deploy/storage/data/uploads
+        src: /dev/vdb
+        fstype: ext4
+        state: mounted
+  when: use_ext_disk

@@ -5,6 +5,7 @@ mks_domain: mks.homeless.ru
 mks_support_email: bulgakova@homeless.ru
 use_local_db: false
 set_logo: false
+use_ext_disk: true
 env_vars:
   TZ: Etc/GMT-3
   SYMFONY_DEBUG: 1
