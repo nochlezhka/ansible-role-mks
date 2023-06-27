@@ -1,0 +1,76 @@
+---
+- name: Install mks in HTTPS mode
+  block:
+    - name: Create folders for HTTPS installation
+      ansible.builtin.file:
+        path: /opt/homeless/mks/deploy/storage/data/{{ item }}
+        state: directory
+        owner: ubuntu
+        mode: '0755'
+      with_items:
+        - "certbot"
+        - "letsencrypt"
+
+    - name: Run Nginx container
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        export MKS_DOMAIN={{ mks_domain }}
+        export MKS_SUPPORT_EMAIL={{ mks_support_email }}
+        export NGINX_MODE=https_init
+        docker-compose up nginx -d
+
+    - name: Run certbot container
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        export MKS_DOMAIN={{ mks_domain }}
+        export MKS_SUPPORT_EMAIL={{ mks_support_email }}
+        export NGINX_MODE=https_init
+        docker-compose --profile certbot up -d
+
+    - name: Waiting for HTTPS certificate issue
+      ansible.builtin.pause:
+        seconds: 60
+
+    - name: Launch a new version of MKS (local db)
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        export MKS_DOMAIN={{ mks_domain }}
+        export MKS_SUPPORT_EMAIL={{ mks_support_email }}
+        export NGINX_MODE=https
+        docker-compose --profile certbot --profile=local up -d
+      when: use_local_db
+
+    - name: Launch a new version of MKS (external db)
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        export MKS_DOMAIN={{ mks_domain }}
+        export MKS_SUPPORT_EMAIL={{ mks_support_email }}
+        export NGINX_MODE=https
+        docker-compose --profile certbot up -d
+      when: not use_local_db
+  when: mks_mode == "https"
+
+- name: Install MKS in HTTP mode
+  block:
+    - name: Launch a new version of MKS (local db)
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        docker-compose --profile=local up -d --no-build
+      when: use_local_db
+
+    - name: Launch a new version of MKS (external db)
+      ansible.builtin.shell: |
+        cd /opt/homeless/mks/deploy
+        export MKS_VERSION={{ mks_version | replace("/", "-") }}
+        docker-compose up -d --no-build
+      when: not use_local_db
+  when: mks_mode == "http"
+
+- name: Pause for 15 second; Wait until app became available
+  ansible.builtin.pause:
+    seconds: 15

@@ -1,0 +1,10 @@
+---
+- name: Execute migrations
+  ansible.builtin.shell: |
+    cd /opt/homeless/mks/deploy
+    docker exec mks-app ./bin/console doctrine:migrations:migrate --no-interaction --env=prod
+
+- name: Change admin password
+  ansible.builtin.shell: |
+    cd /opt/homeless/mks/deploy         
+    docker exec mks-app ./bin/console sonata:user:change-password admin {{ mks_admin_password }} --env=prod
