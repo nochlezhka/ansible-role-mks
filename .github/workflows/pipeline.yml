@@ -3,7 +3,7 @@ name: "CI/CD Pipeline"
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
       - 'release/**'
 
 jobs:
@@ -28,6 +28,6 @@ jobs:
         id: set_version
         uses: kvendingoldo/semver-action@v1.15
         with:
-          primary_branch: master
+          primary_branch: main
           enable_github_releases: true
           github_token: "${{ secrets.GH_TOKEN }}"
