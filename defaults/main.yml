@@ -10,9 +10,6 @@ env_vars:
   SYMFONY_DEBUG: 1
   TRUSTED_HOSTS: '^mks\.homeless\.ru$'
 
-  LOGO_PATH: '/render/logo.png'
-  BIG_LOGO_PATH: '/render/logo_big.png'
-
   APP_VER: ${MKS_VERSION}
   NGINX_HTTPS: 'off'
   DB_NAME: homeless
