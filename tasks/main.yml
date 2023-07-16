@@ -1,0 +1,58 @@
+---
+- name: Recursively remove MKS sources directory
+  ansible.builtin.file:
+    path: /opt/homeless/mks/sources
+    state: absent
+
+- name: Create MKS directories if they do not exist
+  ansible.builtin.file:
+    path: /opt/homeless/{{ item }}
+    state: directory
+    mode: '0755'
+  with_items:
+    - "mks"
+    - "mks/sources"
+    - "mks/deploy"
+    - "mks/deploy/storage/mysql_data"
+    - "mks/deploy/storage/data"
+    - "mks/deploy/storage/data/uploads"
+
+- name: Update  MKS storage/uploads folder permissions
+  ansible.builtin.file:
+    path: /opt/homeless/mks/deploy/storage/data/uploads
+    owner: ubuntu
+    state: directory
+    mode: '0755'
+
+- name: Clone a github repository
+  git:
+    repo: https://github.com/nochlezhka/mks.git
+    dest: /opt/homeless/mks/sources
+    clone: yes
+    update: yes
+    version: "{{ mks_repo_branch | default(mks_version) }}"
+
+- name: Copy docker-compose file
+  ansible.builtin.copy:
+    src: /opt/homeless/mks/sources/deploy/docker-compose.yml
+    dest: /opt/homeless/mks/deploy/docker-compose.yml
+    remote_src: yes
+
+- name: Copy .env file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "/opt/homeless/mks/deploy/.env"
+
+- name: Copy logo files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/files/{{ item }}"
+    dest: "/opt/homeless/mks/deploy/storage/data/uploads/{{ item }}"
+  with_items:
+    - "logo.png"
+    - "big_logo.png"
+  when: set_logo
+
+# Configure
+- ansible.builtin.include_tasks: external_disk.yml
+- ansible.builtin.include_tasks: install.yml
+- ansible.builtin.include_tasks: migrations.yml
