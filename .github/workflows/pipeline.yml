@@ -31,4 +31,4 @@ jobs:
           primary_branch: main
           enable_github_releases: true
           github_token: "${{ secrets.GH_TOKEN }}"
-          init_version: rc/0.1.0
+          init_version: 0.2.0
