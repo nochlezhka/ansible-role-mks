@@ -58,12 +58,31 @@ class InstallTests(unittest.TestCase):
         self.assertIn('CADDY_MODE=https', rendered)
         self.assertIn("DB_PASSWORD='secret'", rendered)
 
-    def test_caddy_storage_permissions(self):
-        storage = next(task['ansible.builtin.file'] for task in self.tasks if 'ansible.builtin.file' in task)
-        self.assertEqual(storage['path'], '/opt/homeless/mks/deploy/storage/data/caddy')
-        self.assertEqual(storage['owner'], '1000')
-        self.assertEqual(storage['group'], '1000')
-        self.assertEqual(storage['mode'], '0755')
+    def test_caddy_certificates_stay_in_container(self):
+        tasks = load_yaml('tasks/main.yml')
+        copy = next(task for task in tasks if task.get('name') == 'Copy docker-compose file')
+        self.variables.update(copy['vars'])
+        uploads = './storage/data/uploads:/var/www/symfony/public/uploads'
+        for certificate_mount in ([], ['./storage/data/caddy:/data']):
+            with self.subTest(certificate_mount=certificate_mount):
+                source = {
+                    'version': '3.9',
+                    'services': {
+                        'caddy': {
+                            'image': 'nochlezhka/mks-app:${MKS_VERSION}',
+                            'volumes': [uploads] + certificate_mount,
+                            'environment': ['MODE=${CADDY_MODE:-http}'],
+                        },
+                        'php': {'volumes': [uploads]},
+                        'db': {'volumes': ['./storage/mysql/data:/var/lib/mysql']},
+                    },
+                }
+                content = yaml.safe_dump(source).encode()
+                self.variables['mks_compose_source'] = {'content': base64.b64encode(content).decode()}
+                rendered = yaml.safe_load(self.render(copy['ansible.builtin.copy']['content']))
+                source['services']['caddy']['volumes'] = [uploads]
+                self.assertEqual(rendered, source)
+        self.assertFalse(any('ansible.builtin.file' in task for task in self.tasks))
 
     def test_mode_validation(self):
         conditions = self.tasks[0]['ansible.builtin.assert']['that']

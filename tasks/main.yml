@@ -44,10 +44,15 @@
     fail_msg: Select mks_version and mks_repo_branch containing the Caddy deployment from nochlezhka/mks PR 156.
 
 - name: Copy docker-compose file
+  vars:
+    mks_compose_config: '{{ mks_compose_source.content | b64decode | from_yaml }}'
   ansible.builtin.copy:
-    src: /opt/homeless/mks/sources/deploy/docker-compose.yml
+    content: >-
+      {{ mks_compose_config | combine(
+        {'services': {'caddy': {'volumes': mks_compose_config.services.caddy.volumes
+          | default([]) | reject('equalto', './storage/data/caddy:/data') | list}}},
+        recursive=True) | to_nice_yaml }}
     dest: /opt/homeless/mks/deploy/docker-compose.yml
-    remote_src: yes
 
 - name: Copy .env file
   ansible.builtin.template:

@@ -1,9 +1,3 @@
-Role Name
-=========
-
-A brief description of the role goes here.
-
-Requirements
 # ansible-role-mks
 
 Deploys [MKS](https://github.com/nochlezhka/mks) with Caddy, PHP and an optional
@@ -70,11 +64,15 @@ certbot containers belonging to the same Compose project and start Caddy. Keep
 the existing deployment directory and Compose project name when upgrading.
 Containers from a different project require manual review and removal.
 
-Certificates are stored in `storage/data/caddy`, owned by UID/GID `1000:1000`.
-Back up and preserve this directory across deployments. Caddy issues new
-certificates; old `storage/data/letsencrypt` and `storage/data/certbot` directories
-are left untouched. Expect a brief interruption during the switch and initial
-certificate issuance. Certificate availability is not checked by the role.
+Caddy manages certificates inside the container. The role removes the upstream
+`./storage/data/caddy:/data` bind mount from the deployed Compose configuration
+and does not create a certificate directory on the host. Upload and database
+mounts are preserved. Certificates survive container restarts, but are lost when
+the container is recreated. Caddy will request new certificates, so frequent
+recreation can hit ACME rate limits. Existing certificate directories on the host
+are left untouched and are not imported. Expect a brief interruption during the
+switch and initial certificate issuance. Certificate availability is not checked
+by the role.
 
 There is no `https_init` mode or `certbot` profile anymore. After deployment,
 inspect certificate issuance with `docker logs caddy`. For manual Compose
@@ -88,8 +86,8 @@ Install `ansible-core>=2.16,<2.19`, then run:
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-These tests validate Ansible templating, launch modes, port overrides, storage
-permissions and the legacy Compose guard without Docker or a target host.
+These tests validate Ansible templating, launch modes, port overrides, removal of
+the certificate bind mount and the legacy Compose guard without Docker or a target host.
 
 ## License
 

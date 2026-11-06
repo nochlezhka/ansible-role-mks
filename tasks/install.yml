@@ -6,14 +6,6 @@
       - mks_mode != 'https' or mks_domain | length > 0
       - mks_mode != 'https' or mks_support_email | length > 0
 
-- name: Create Caddy storage directory
-  ansible.builtin.file:
-    path: /opt/homeless/mks/deploy/storage/data/caddy
-    state: directory
-    owner: '1000'
-    group: '1000'
-    mode: '0755'
-
 - name: Launch a new version of MKS
   ansible.builtin.command:
     argv: "{{ ['docker-compose'] + (['--profile', 'local'] if use_local_db | bool else []) + ['up', '-d', '--no-build', '--remove-orphans'] }}"
