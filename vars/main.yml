@@ -1,2 +1,9 @@
 ---
 # vars file for ansible-role-mks
+mks_compose_environment:
+  MKS_VERSION: '{{ mks_version | replace("/", "-") }}'
+  MKS_DOMAIN: '{{ mks_domain }}'
+  MKS_SUPPORT_EMAIL: '{{ mks_support_email }}'
+  CADDY_MODE: '{{ mks_mode }}'
+  HTTP_PORT: '{{ env_vars.HTTP_PORT | default(80) }}'
+  HTTPS_PORT: '{{ env_vars.HTTPS_PORT | default(443) }}'
