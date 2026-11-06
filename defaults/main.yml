@@ -13,7 +13,6 @@ env_vars:
   TRUSTED_HOSTS: '^mks\.homeless\.ru$'
 
   APP_VER: ${MKS_VERSION}
-  NGINX_HTTPS: 'off'
   DB_NAME: homeless
   MYSQL_DATABASE: homeless
 
