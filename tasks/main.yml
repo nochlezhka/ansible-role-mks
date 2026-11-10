@@ -57,7 +57,11 @@
 - name: Copy .env file
   ansible.builtin.template:
     src: env.j2
-    dest: "/opt/homeless/mks/deploy/.env"
+    dest: /opt/homeless/mks/deploy/.env
+    owner: root
+    group: root
+    mode: "0600"
+  diff: false
 
 - name: Copy logo files
   ansible.builtin.copy:
